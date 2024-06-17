@@ -90,7 +90,11 @@ class ExtractData(object):
             msg = email.message_from_bytes(msg_content)
 
             # Decode email subject
-            subject = self.decode_subject(msg["Subject"])
+            try:
+                subject = self.decode_subject(msg["Subject"])
+            except TypeError:
+                logging.info('Subject is Null')
+                continue
 
             # Create a safe file name
             file_name = ''.join(c if c.isalnum() else '_' for c in subject)
@@ -99,7 +103,7 @@ class ExtractData(object):
             try:
                 email_body, content_type = self.get_email_content(msg)
             except TypeError:
-                logging.info('Subject or Email Content is None')
+                logging.info('Email Content is Null')
                 continue
 
             # Save the email body to a file
