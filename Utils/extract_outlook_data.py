@@ -2,6 +2,7 @@ import imaplib
 import email
 from email.header import decode_header
 import os
+import logging
 
 class ExtractData(object):
     """docstring for ExtractData."""
@@ -95,7 +96,11 @@ class ExtractData(object):
             file_name = ''.join(c if c.isalnum() else '_' for c in subject)
 
             # Get the email content
-            email_body, content_type = self.get_email_content(msg)
+            try:
+                email_body, content_type = self.get_email_content(msg)
+            except TypeError:
+                logging.info('Subject or Email Content is None')
+                continue
 
             # Save the email body to a file
             if content_type == "text/plain":
