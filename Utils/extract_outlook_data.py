@@ -106,16 +106,19 @@ class ExtractData(object):
                 logging.info('Email Content is Null')
                 continue
 
+            # Get the email received date
+            received_date = email.utils.parsedate_to_datetime(msg["Date"]).strftime('%Y-%m-%d')
+
             # Save the email body to a file
             if content_type == "text/plain":
-                file_path = os.path.join(output_folder, f"{file_name}.txt")
+                file_path = os.path.join(output_folder, f"{received_date}_{file_name}.txt")
             elif content_type == "text/html":
-                file_path = os.path.join(output_folder, f"{file_name}.html")
+                file_path = os.path.join(output_folder, f"{received_date}_{file_name}.html")
 
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(email_body)
 
-            print(f"Saved email: {subject}")
+            print(f"Saved email: {received_date}_{subject}")
 
             # Save attachments
             if msg.is_multipart():
