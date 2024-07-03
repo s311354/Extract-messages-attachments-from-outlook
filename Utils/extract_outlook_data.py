@@ -43,7 +43,15 @@ class ExtractData(object):
     def decode_subject(self, subject: object):
         decoded_subject, encoding = decode_header(subject)[0]
         if isinstance(decoded_subject, bytes):
-            decoded_subject = decoded_subject.decode(encoding if encoding else "utf-8")
+            for enc in ["utf-8", "big5", "latin1", "ascii"]:
+                try:
+                    decoded_subject = decoded_subject.decode(encoding if encoding else enc)
+                    break
+                except UnicodeDecodeError:
+                    continue
+
+        if not isinstance(decoded_subject, str):
+            decoded_subject = str(decoded_subject)
         return decoded_subject
 
     # Function to extract the email content
