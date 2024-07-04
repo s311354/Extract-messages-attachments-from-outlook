@@ -70,9 +70,12 @@ class ExtractData(object):
                     elif content_type == "text/html":
                         return body, content_type
         else:
-            body = msg.get_payload(decode=True).decode()
-            content_type = msg.get_content_type()
-            return body, content_type
+            try:
+                body = msg.get_payload(decode=True).decode()
+                content_type = msg.get_content_type()
+                return body, content_type
+            except UnicodeDecodeError:
+                pass
 
     # Function to save attachments
     def save_attachment(self, part, attachment_folder: str, subject: object):
