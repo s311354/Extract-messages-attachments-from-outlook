@@ -1,6 +1,7 @@
 import imaplib
 import email
 from email.header import decode_header
+from pathlib import Path
 import os
 import logging
 
@@ -114,17 +115,21 @@ class ExtractData(object):
             try:
                 email_body, content_type = self.get_email_content(msg)
             except TypeError:
-                logging.info('Email Content is Null')
+                logging.info('$subject: Email Content is Null')
                 continue
 
             # Get the email received date
             received_date = email.utils.parsedate_to_datetime(msg["Date"]).strftime('%Y-%m-%d')
+            received_mon = email.utils.parsedate_to_datetime(msg["Date"]).strftime('%Y-%b')
+
+            output_mon_folder = output_folder / Path(received_mon)
+            output_mon_folder.mkdir(parents=True, exist_ok=True)
 
             # Save the email body to a file
             if content_type == "text/plain":
-                file_path = os.path.join(output_folder, f"{received_date}_{file_name}.txt")
+                file_path = os.path.join(output_mon_folder, f"{received_date}_{file_name}.txt")
             elif content_type == "text/html":
-                file_path = os.path.join(output_folder, f"{received_date}_{file_name}.html")
+                file_path = os.path.join(output_mon_folder, f"{received_date}_{file_name}.html")
 
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(email_body)
