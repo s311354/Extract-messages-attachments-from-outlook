@@ -125,6 +125,9 @@ class ExtractData(object):
             output_mon_folder = output_folder / Path(received_mon)
             output_mon_folder.mkdir(parents=True, exist_ok=True)
 
+            attachment_mon_folder = attachment_folder / Path(received_mon)
+            attachment_mon_folder.mkdir(parents=True, exist_ok=True)
+
             # Save the email body to a file
             if content_type == "text/plain":
                 file_path = os.path.join(output_mon_folder, f"{received_date}_{file_name}.txt")
@@ -139,4 +142,4 @@ class ExtractData(object):
             # Save attachments
             if msg.is_multipart():
                 for part in msg.walk():
-                    self.save_attachment(part, attachment_folder, subject)
+                    self.save_attachment(part, attachment_mon_folder, subject)
