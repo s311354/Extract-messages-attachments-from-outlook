@@ -87,6 +87,9 @@ class ExtractData(object):
                 if isinstance(filename, bytes):
                     filename = filename.decode()
                 filename = f"{subject}_{filename}"
+
+                # work around
+                filename = filename.replace(" - ", "_").replace(" ", "_").replace("/", "_").replace("-", "_")
                 filepath = os.path.join(attachment_folder, filename)
                 
                 with open(filepath, "wb") as f:
