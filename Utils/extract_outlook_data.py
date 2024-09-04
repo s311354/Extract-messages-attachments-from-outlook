@@ -7,7 +7,7 @@ import logging
 
 class ExtractData(object):
     """docstring for ExtractData."""
-    def __init__(self, email_user: str, email_pass: str, startdate = None, enddate = None):
+    def __init__(self, email_user: str, email_pass: str, port: str, startdate = None, enddate = None):
         super(ExtractData, self).__init__()
         self.startdate = startdate
         self.enddate = enddate
@@ -16,7 +16,7 @@ class ExtractData(object):
         # Connect to the server
         try:
             # Connect to the server
-            self.mail = imaplib.IMAP4_SSL("outlook.office365.com")
+            self.mail = imaplib.IMAP4_SSL("outlook.office365.com", port)
             # Login to the account
             self.mail.login(email_user, email_pass)
         except imaplib.IMAP4.error:

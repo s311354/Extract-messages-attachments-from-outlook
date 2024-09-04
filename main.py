@@ -7,6 +7,8 @@ from pathlib import Path
 
 import Utils
 
+ImapPort = 993
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -60,12 +62,12 @@ if __name__ == '__main__':
     if args.email and args.password:
 
         if args.startdate is None or args.enddate is None:
-            extractdata = Utils.ExtractData(args.email, args.password)
+            extractdata = Utils.ExtractData(args.email, args.password, ImapPort)
         else:
             if args.startdate <= args.enddate:
                 logging.info('Within Range')
                 print(args.startdate, args.enddate)
-                extractdata = Utils.ExtractData(args.email, args.password, args.startdate, args.enddate)
+                extractdata = Utils.ExtractData(args.email, args.password, ImapPort, args.startdate, args.enddate)
             else:
                 logging.error("Out of Range")
                 raise ValueError("startdate must be before or equal to enddate")
