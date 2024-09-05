@@ -3,14 +3,25 @@
 
 import logging
 import argparse
+import sys
 from pathlib import Path
 
 import Utils
 
+IMAPserver = "outlook.office365.com"
 ImapPort = 993
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging to write to both file and console
+log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+# Console handler
+log_handler_console = logging.StreamHandler(sys.stdout)
+log_handler_console.setFormatter(log_formatter)
+
+# Create a logger
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+logger.addHandler(log_handler_console)
 
 def create_parser():
     parser = argparse.ArgumentParser()
@@ -65,14 +76,15 @@ if __name__ == '__main__':
             extractdata = Utils.ExtractData(args.email, args.password, ImapPort)
         else:
             if args.startdate <= args.enddate:
-                logging.info('Within Range')
-                print(args.startdate, args.enddate)
-                extractdata = Utils.ExtractData(args.email, args.password, ImapPort, args.startdate, args.enddate)
+                # print(args.startdate, args.enddate)
+                extractdata = Utils.ExtractData(IMAPserver, args.email, args.password, ImapPort, args.startdate, args.enddate)
+                logging.info(f"Connected to the email server {IMAPserver}.")
             else:
-                logging.error("Out of Range")
-                raise ValueError("startdate must be before or equal to enddate")
+                logging.error(f"LOGIN failed (Retry in setting up startdate/enddatey ...)")
+                sys.exit(1)
     else:
-        raise ValueError("Email and password must be provided")
+        logging.error(f"Email and password must be provided")
+        sys.exit(1)
 
     output_dir = args.output
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -80,4 +92,4 @@ if __name__ == '__main__':
     attachment_dir.mkdir(parents=True, exist_ok=True)
     extractdata.iterate_emails(output_dir, attachment_dir)
 
-print("Download complete.")
+logging.info(f"Download complete.")

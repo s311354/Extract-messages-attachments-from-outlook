@@ -7,7 +7,7 @@ import logging
 
 class ExtractData(object):
     """docstring for ExtractData."""
-    def __init__(self, email_user: str, email_pass: str, port: str, startdate = None, enddate = None):
+    def __init__(self,server: str,  email_user: str, email_pass: str, port: str, startdate = None, enddate = None):
         super(ExtractData, self).__init__()
         self.startdate = startdate
         self.enddate = enddate
@@ -16,11 +16,12 @@ class ExtractData(object):
         # Connect to the server
         try:
             # Connect to the server
-            self.mail = imaplib.IMAP4_SSL("outlook.office365.com", port)
+            self.mail = imaplib.IMAP4_SSL(server, port)
             # Login to the account
             self.mail.login(email_user, email_pass)
-        except imaplib.IMAP4.error:
-            raise ValueError("Failed to login, check your email and password")
+        except imaplib.IMAP4.error as e:
+            logging.error(f"Failed to login, please check your email and password. Error: {str(e)}")
+            self.mail.logout()  # Ensure proper logout before retrying connection
 
     # Search for emails 
     def search_email(self):
@@ -28,11 +29,12 @@ class ExtractData(object):
         self.mail.select("inbox")
 
         if self.optflag:
-            try:
-                # Search for emails within the date range
-                status, messages = self.mail.search(None, f'(SINCE "{self.startdate}" BEFORE "{self.enddate}")')
-            except imaplib.IMAP4.error:
-                raise ValueError("Dates must be in 'DD-MMM-YYYY' format")
+            #try:
+            # Search for emails within the date range
+            status, messages = self.mail.search(None, f'(SINCE "{self.startdate}" BEFORE "{self.enddate}")')
+            #except imaplib.IMAP4.error as e:
+                #logging.error(f"Dates must be in 'DD-MMM-YYYY' format. Error: {str(e)}")
+                #self.mail.logout()  # Ensure proper logout before retrying connection
         else:
             # Search for all emails in the mailbox
             status, messages = self.mail.search(None, "ALL")
@@ -48,7 +50,8 @@ class ExtractData(object):
                 try:
                     decoded_subject = decoded_subject.decode(encoding if encoding else enc)
                     break
-                except UnicodeDecodeError:
+                except UnicodeDecodeError as e:
+                    logging.warn(f"An unexpected warn occurred. Warn: {str(e)}")
                     continue
 
         if not isinstance(decoded_subject, str):
@@ -63,7 +66,8 @@ class ExtractData(object):
                 content_disposition = str(part.get("Content-Disposition"))
                 try:
                     body = part.get_payload(decode=True).decode()
-                except:
+                except Exception as e:
+                    logging.warn(f"An unexpected warn occurred. Warn: {str(e)}")
                     continue
                 if "attachment" not in content_disposition:
                     if content_type == "text/plain":
@@ -75,7 +79,8 @@ class ExtractData(object):
                 body = msg.get_payload(decode=True).decode()
                 content_type = msg.get_content_type()
                 return body, content_type
-            except UnicodeDecodeError:
+            except UnicodeDecodeError as e:
+                logging.warn(f"An unexpected warn occurred. Warn: {str(e)}")
                 pass
 
     # Function to save attachments
@@ -94,8 +99,8 @@ class ExtractData(object):
                 
                 with open(filepath, "wb") as f:
                     f.write(part.get_payload(decode=True))
-                
-                print(f"Saved attachment: {filename}")
+            
+                logging.info(f"Saved attachment: {filename}.")
 
     def iterate_emails(self, output_folder, attachment_folder):
         # Iterate through all email IDs and fetch each email
@@ -107,8 +112,8 @@ class ExtractData(object):
             # Decode email subject
             try:
                 subject = self.decode_subject(msg["Subject"])
-            except TypeError:
-                logging.info('Subject is Null')
+            except TypeError as e:
+                logging.warn(f"Subject is Null. Warn: {str(e)}")
                 continue
 
             # Create a safe file name
@@ -117,8 +122,8 @@ class ExtractData(object):
             # Get the email content
             try:
                 email_body, content_type = self.get_email_content(msg)
-            except TypeError:
-                logging.info('$subject: Email Content is Null')
+            except TypeError as e:
+                logging.warn(f"$subject: Email Content is Nul. Warn: {str(e)}")
                 continue
 
             # Get the email received date
@@ -140,7 +145,7 @@ class ExtractData(object):
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(email_body)
 
-            print(f"Saved email: {received_date}_{subject}")
+            logging.info(f"Saved email: {received_date}_{subject}.")
 
             # Save attachments
             if msg.is_multipart():
