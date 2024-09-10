@@ -93,3 +93,4 @@ if __name__ == '__main__':
     extractdata.iterate_emails(output_dir, attachment_dir)
 
 logging.info(f"Download complete.")
+sys.exit(0)

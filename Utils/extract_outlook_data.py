@@ -27,6 +27,7 @@ class ExtractData(object):
     def search_email(self):
         # Select the mailbox you want to download emails from
         self.mail.select("inbox")
+        logging.info("Mailbox inbox folder selected.")
 
         if self.optflag:
             #try:
