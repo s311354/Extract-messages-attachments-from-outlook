@@ -5,6 +5,7 @@ import logging
 import argparse
 import sys
 from pathlib import Path
+import time
 
 import Utils
 
@@ -65,26 +66,44 @@ def create_parser():
 
     return parser
 
+def login_with_retries(server: str, port: int, email_user: str, email_pass: str, startdate: str, enddate: str, max_retries=30, retry_delay=5):
+    for attempt in range(max_retries):
+        if startdate is None or enddate is None:
+            extractdata = Utils.ExtractData(server, email_user, email_pass, port)
+        else:
+            if startdate <= enddate:
+                # print(args.startdate, args.enddate)
+                extractdata = Utils.ExtractData(server, email_user, email_pass, ImapPort, startdate, enddate)
+            else:
+                logging.error(f"LOGIN failed (Retry in setting up startdate/enddatey ...)")
+                sys.exit(1)
+
+        if extractdata.mailflag is False:
+            logging.error(f"LOGIN failed on attempt {attempt + 1} of {max_retries} (Retry in {retry_delay} seconds).")
+            logging.error(f"Retrying connection in {retry_delay} seconds...")
+            time.sleep(retry_delay)
+            continue
+        else:
+            logging.info(f"Connected to the email server {server}.")
+            return extractdata
+
+    logging.error("All login attempts failed. Check your email credentials and settings.")
+    return None  # Return False if all attempts fail
+
 if __name__ == '__main__':
     # Get arguments
     parser = create_parser()
     args = parser.parse_args()
 
     if args.email and args.password:
-
-        if args.startdate is None or args.enddate is None:
-            extractdata = Utils.ExtractData(args.email, args.password, ImapPort)
-        else:
-            if args.startdate <= args.enddate:
-                # print(args.startdate, args.enddate)
-                extractdata = Utils.ExtractData(IMAPserver, args.email, args.password, ImapPort, args.startdate, args.enddate)
-                logging.info(f"Connected to the email server {IMAPserver}.")
-            else:
-                logging.error(f"LOGIN failed (Retry in setting up startdate/enddatey ...)")
-                sys.exit(1)
+        extractdata = login_with_retries(IMAPserver, ImapPort, args.email, args.password, args.startdate, args.enddate)
     else:
         logging.error(f"Email and password must be provided")
         sys.exit(1)
+
+    if extractdata is None:
+        # Handle login failure
+        raise RuntimeError("Failed to IMAP login after multiple attempts.")
 
     output_dir = args.output
     output_dir.mkdir(parents=True, exist_ok=True)

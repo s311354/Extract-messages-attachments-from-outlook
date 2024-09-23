@@ -17,10 +17,12 @@ class ExtractData(object):
         try:
             # Connect to the server
             self.mail = imaplib.IMAP4_SSL(server, port)
+            self.mailflag = True
             # Login to the account
             self.mail.login(email_user, email_pass)
         except imaplib.IMAP4.error as e:
-            logging.error(f"Failed to login, please check your email and password. Error: {str(e)}")
+            logging.error(f"Error: {str(e)}")
+            self.mailflag = False
             self.mail.logout()  # Ensure proper logout before retrying connection
 
     # Search for emails 
